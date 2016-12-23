@@ -1,0 +1,6 @@
+build-*/
+Makefile
+Psiora.pro.user*
+debug_output.log
+psiora.exe
+psiora

@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/gfx">
+        <file alias="HD44780_Font">resources/hd44780.bmp</file>
+        <file alias="HD66780_Font">resources/hd66780.bmp</file>
+        <file alias="Logo">resources/logo.png</file>
+        <file alias="Splash">resources/splash.bmp</file>
+        <file alias="UDG_Font">resources/udg.bmp</file>
+    </qresource>
+</RCC>

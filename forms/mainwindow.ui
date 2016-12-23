@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>504</width>
+    <height>190</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Psiora Emulator - v1.2</string>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>504</width>
+      <height>170</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>504</width>
+      <height>170</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>504</width>
+      <height>170</height>
+     </size>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>504</width>
+      <height>170</height>
+     </size>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>504</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad_ROM"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuEmulator">
+    <property name="title">
+     <string>Emulator</string>
+    </property>
+    <addaction name="actionSwitch_On"/>
+    <addaction name="separator"/>
+    <addaction name="actionHardReset"/>
+   </widget>
+   <widget class="QMenu" name="menuDatapaks">
+    <property name="title">
+     <string>Datapaks</string>
+    </property>
+    <widget class="QMenu" name="menuSlot_B">
+     <property name="title">
+      <string>Slot B</string>
+     </property>
+     <addaction name="actionInsertPakB"/>
+     <addaction name="actionEjectPakB"/>
+    </widget>
+    <widget class="QMenu" name="menuSlot_C">
+     <property name="title">
+      <string>Slot C</string>
+     </property>
+     <addaction name="actionInsertPakC"/>
+     <addaction name="actionEjectPakC"/>
+    </widget>
+    <addaction name="menuSlot_B"/>
+    <addaction name="menuSlot_C"/>
+    <addaction name="separator"/>
+    <addaction name="actionCreate_New_Pak"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionDonate"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEmulator"/>
+   <addaction name="menuDatapaks"/>
+   <addaction name="menuAbout"/>
+  </widget>
+  <action name="actionLoad_ROM">
+   <property name="text">
+    <string>Load ROM...</string>
+   </property>
+  </action>
+  <action name="actionSwitch_On">
+   <property name="text">
+    <string>Switch On</string>
+   </property>
+  </action>
+  <action name="actionHardReset">
+   <property name="text">
+    <string>Hard Reset!!! (CAUTION)</string>
+   </property>
+  </action>
+  <action name="actionCreate_New_Pak">
+   <property name="text">
+    <string>Create New Pak...</string>
+   </property>
+  </action>
+  <action name="actionInsertPakB">
+   <property name="text">
+    <string>Insert...</string>
+   </property>
+  </action>
+  <action name="actionEjectPakB">
+   <property name="text">
+    <string>Eject</string>
+   </property>
+  </action>
+  <action name="actionInsertPakC">
+   <property name="text">
+    <string>Insert</string>
+   </property>
+  </action>
+  <action name="actionEjectPakC">
+   <property name="text">
+    <string>Eject</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionDonate">
+   <property name="text">
+    <string>Donate</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>actionQuit</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>251</x>
+     <y>94</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
