@@ -18,7 +18,9 @@ public:
     void* getDrawingArea();
 
 private slots:
+	void on_actionHardReset_triggered();
     void on_actionLoad_ROM_triggered();
+	void on_actionSwitch_On_triggered();
 	void do_everySecond();
 	void keyPressEvent(QKeyEvent *event);
 	void keyReleaseEvent(QKeyEvent *event);

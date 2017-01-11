@@ -1,10 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
 #include <QFileDialog>
-#include <iostream>
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeyEvent>
+#include <QPushButton>
+
 #include "emucore.h"
 #include "keypad.h"
 
@@ -35,12 +37,43 @@ void* MainWindow::getDrawingArea()
 void MainWindow::on_actionLoad_ROM_triggered()
 {
 	emucore->pause(true);
+
+	if (emucore->isPowered()) {
+		QMessageBox msgBox;
+		msgBox.setText("The emulator is not switched off. Changes to RAM cannot be saved as this time.");
+		msgBox.setInformativeText("Are you sure you want to load a new ROM anyway?");
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+		msgBox.setDefaultButton(QMessageBox::Cancel);
+		msgBox.setIcon(QMessageBox::Warning);
+		int ret = msgBox.exec();
+		if (ret == QMessageBox::Cancel) {
+			emucore->pause(false);
+			return;
+		}
+	}
+	
+	int suc = emucore->save();
+	if (suc != FILEIO_SUCCESS) {
+		QMessageBox msgBox;
+		msgBox.setText("Problem saving the current RAM. Loading a new ROM with result in loss of data.");
+		msgBox.setInformativeText("Are you sure you want to load a new ROM anyway?");
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+		msgBox.setDefaultButton(QMessageBox::Cancel);
+		msgBox.setIcon(QMessageBox::Warning);
+		int ret = msgBox.exec();
+		if (ret == QMessageBox::Cancel) {
+			emucore->pause(false);
+			return;
+		}
+	}
+
     QString fileName = QFileDialog::getOpenFileName(this, "Select ROM file...", "", "Psion ROMs (*.bin *.rom *.dat);;All Files (*.*)");
     if (fileName == "") {
 		emucore->pause(false);
         return;
     }
-    int suc = emucore->load(fileName.toStdString());
+    
+	suc = emucore->load(fileName.toStdString());
     if (suc == FILEIO_ROM_LoadFail) {
         QMessageBox msgBox;
         msgBox.setText("ROM could not be loaded");
@@ -56,6 +89,25 @@ void MainWindow::on_actionLoad_ROM_triggered()
     }
     emucore->setPower(true);
 	emucore->pause(false);
+}
+
+void MainWindow::on_actionHardReset_triggered() {
+	emucore->pause(true);
+	QMessageBox msgBox;
+	msgBox.setText("This will completely erase all data in this ROM. This is unrecoverable!!");
+	msgBox.setInformativeText("Are you sure you want to hard reset the emulator?");
+	msgBox.setStandardButtons(QMessageBox::Cancel);
+	QPushButton *hardResetButton = msgBox.addButton("Hard Reset!", QMessageBox::ActionRole);
+	msgBox.setDefaultButton(QMessageBox::Cancel);
+	msgBox.exec();
+	if (msgBox.clickedButton() == hardResetButton) {
+		emucore->hardReset();
+	}
+	emucore->pause(false);
+}
+
+void MainWindow::on_actionSwitch_On_triggered() {
+	emucore->setPower(true);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {

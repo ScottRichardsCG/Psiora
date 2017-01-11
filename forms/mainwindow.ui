@@ -88,7 +88,7 @@
      </rect>
     </property>
     <property name="value">
-     <number>24</number>
+     <number>0</number>
     </property>
     <property name="textVisible">
      <bool>true</bool>
@@ -154,7 +154,6 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
-    <addaction name="actionDonate"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEmulator"/>
@@ -204,11 +203,6 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
-   </property>
-  </action>
-  <action name="actionDonate">
-   <property name="text">
-    <string>Donate</string>
    </property>
   </action>
   <action name="actionQuit">

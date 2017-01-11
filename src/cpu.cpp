@@ -242,10 +242,10 @@ void Cpu::reset()
     memory->writeDirect(0x0011, 0x20);
     memory->writeDirect(0x0012, 0x00);
     memory->writeDirect(0x0013, 0x00);
-    //BYTE ram = memory->readDirect(0x0014);
-    //ram &= 0x80;
-    //ram |= 0x7C;
-    //memory->writeDirect(0x0014, ram);
+    BYTE ram = memory->readDirect(0x0014);
+    ram &= 0x80;
+    ram |= 0x7C;
+    memory->writeDirect(0x0014, ram);
 	memory->writeDirect(0x0014, 0x7C);
     //datapak->port6_DDR_W(0x00);
     memory->writeDirect(0x0019, 0xFF);

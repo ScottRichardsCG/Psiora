@@ -83,6 +83,7 @@ public:
 
     int load(std::string filename);
     int analyseROM(std::string filename);
+	int save();
 };
 
 extern EmuCore *emucore;

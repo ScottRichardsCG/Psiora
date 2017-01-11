@@ -293,6 +293,7 @@ int EmuCore::load(std::string filename) {
 
 	romPath = filename;
 	ramPath = filename + ".sav";
+	romLoaded = true;
 
 	INTERNAL_reset();
 	memory->clearROM();
@@ -304,21 +305,24 @@ int EmuCore::load(std::string filename) {
 	return romType;
 }
 
-/*
-int EmuCore::save() {
-    if (!fileio.romLoaded) return FILEIO_SUCCESS;
 
-    QFile file(fileio.ramPath);
-    if (!file.open(QIODevice::ReadWrite)) {
-        return FILEIO_RAM_SaveFail;
-    }
-    char ram[983040];
-    unsigned int len = settings[currentMode].maxRamBanks * 0x4000;
-    memory->readRAM(ram, len);
-    file.write(QByteArray(ram, len));
-    file.close();
-    return FILEIO_SUCCESS;
-}*/
+int EmuCore::save() {
+    if (!romLoaded)
+		return FILEIO_SUCCESS;
+
+	std::ofstream ramStream;
+	ramStream.open(ramPath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+	if (!ramStream.good())
+		return FILEIO_RAM_SaveFail;
+
+	unsigned int length = settings[currentMode].maxRamBanks * 0x4000;
+	char ram[98304];
+	memory->readRAM(ram, length);
+	ramStream.write(ram, length);
+	ramStream.close();
+
+	return FILEIO_SUCCESS;
+}
 
 // This function analyses a ROM file and returns its intended hardware setup
 int EmuCore::analyseROM(std::string filename) {
