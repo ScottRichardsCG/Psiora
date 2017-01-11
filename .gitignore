@@ -4,3 +4,9 @@ Psiora.pro.user*
 debug_output.log
 psiora.exe
 psiora
+debug/*
+GeneratedFiles/*
+Win32/*
+*.log
+*.VC.opendb
+*.VC.db

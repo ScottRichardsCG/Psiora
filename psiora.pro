@@ -17,7 +17,7 @@ win32:DEFINES += "_GNU_SOURCE=1"
 #win32:DEFINES += "main=SDL_main"
 
 #Include SDL1.2 - Win32 Mingw
-win32-g++*:INCLUDEPATH += C:/Devel/SDL-devel-1.2.15-mingw32/include
+win32-g++*:INCLUDEPATH += C:/Devel/SDL-devel-1.2.15-mingw32/include/SDL
 #win32-g++*:LIBS += C:/Devel/SDL-devel-1.2.15-mingw32/lib/libSDLmain.a
 win32-g++*:LIBS += C:/Devel/SDL-devel-1.2.15-mingw32/lib/libSDL.dll.a
 

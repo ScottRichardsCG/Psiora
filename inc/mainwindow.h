@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -18,9 +19,13 @@ public:
 
 private slots:
     void on_actionLoad_ROM_triggered();
+	void do_everySecond();
+	void keyPressEvent(QKeyEvent *event);
+	void keyReleaseEvent(QKeyEvent *event);
 
 private:
     Ui::MainWindow *ui;
+	QTimer *everySecondTimer;
 };
 
 #endif // MAINWINDOW_H

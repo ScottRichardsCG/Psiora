@@ -15,6 +15,7 @@ private:
     bool logOpen;
     FILE *logFile;
 #ifdef DEBUG_MODE_ENABLED_CPU
+	FILE *logFileCPU;
     int ignoreCmd;
     int breakPoint;
 #endif

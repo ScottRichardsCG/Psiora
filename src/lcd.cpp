@@ -62,19 +62,23 @@ Lcd::Lcd()
         }
     }
 
-    power = false;
-    mode = 0;
-    memset(ram.data, 0, 196);
-    ram.addr = 0;
-    ram.direction = 1;
-    cursor.type = 0;
-    cursor.underline = false;
-    cursor.block = false;
-    nextUpdate = 0;
-    errorState = 0;
+	init();
+}
 
-    renderer->showSplash();
-    renderer->update();
+void Lcd::init() {
+	power = false;
+	mode = 0;
+	memset(ram.data, 0, 196);
+	ram.addr = 0;
+	ram.direction = 1;
+	cursor.type = 0;
+	cursor.underline = false;
+	cursor.block = false;
+	nextUpdate = 0;
+	errorState = 0;
+
+	renderer->showSplash();
+	renderer->update();
 }
 
 void Lcd::render() {
@@ -237,7 +241,6 @@ void Lcd::W_data(BYTE data) {
         // Update UDG data and update UDG texture in video memory.
         ram.data[ram.addr] = data & 0x1f;
         renderer->updateUdg(((ram.addr & 0x7f) >> 3), (ram.addr & 7), (data & 0x1f));
-        renderer->updateUdg(((ram.addr & 0x7f) >> 3) + 8, (ram.addr & 7), (data & 0x1f));
         render();
     }
     else {

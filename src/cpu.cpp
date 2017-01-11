@@ -7,6 +7,18 @@
 
 #define callOp(number, name, parameter) case number: name(parameter); break;
 
+#define TIMER1_CSR			0x0008
+#define TIMER1_FRC			0x0009
+#define TIMER1_FRC_h		0x0009
+#define TIMER1_FRC_l		0x000A
+#define TIMER1_OCR			0x000B
+#define TIMER1_OCR_h		0x000B
+#define TIMER1_OCR_l		0x000C
+#define TIMER2_CSR			0x000F
+#define INTERRUPT_OCR		0xFFF4
+#define INTERRUPT_NMI		0xFFFC
+#define INTERRUPT_BOOT	0xFFFE
+
 Cpu *cpu;
 
 // OP-CODE INFORMATION
@@ -96,36 +108,30 @@ int Cpu::doIteration()
         reset();
         return 1;
     case CPU_Halt:
-        return 46080;
+        return 9216;
     case CPU_Active:
-        if ((NMI_waiting || OCR_waiting) && (!(ccr & 0x10)))
-        {
+        if ((NMI_waiting || OCR_waiting) && (!(ccr & 0x10))) {
             checkInterrupts();
             cycles = 1;
-        }
-        else if (wai_state & (M6800_WAI | M6800_SLP))
-        {
+        } else if (wai_state & (M6800_WAI | M6800_SLP)) {
             cycles = 1;
-        }
-        else
-        {
+        } else {
             cycles = doOpcode();
         }
 
-        if (memory->readDirect(0x0008) & 0x08)
+        if (memory->readDirect(TIMER1_CSR) & 0x08)
         {
             WORD_16 tmp1, tmp2;
-            tmp1 = memory->readDirect16(0x0009); // Timer1_FRC
-            tmp2 = memory->readDirect16(0x000B); // Timer1_OCR
+            tmp1 = memory->readDirect16(TIMER1_FRC);
+            tmp2 = memory->readDirect16(TIMER1_OCR);
 
             tmp1.w += cycles;
-            if (tmp1.w > tmp2.w)
-            {
+            if (tmp1.w >= tmp2.w) {
                 tmp1.w -= tmp2.w;
                 OCR_waiting = true;
             }
 
-            memory->writeDirect16(0x0009, tmp1);
+            memory->writeDirect16(TIMER1_FRC, tmp1);
         }
         return cycles;
     }
@@ -149,38 +155,38 @@ void Cpu::notify_NMI()
 
 void Cpu::W_timer1_CSR(BYTE data)
 {
-    memory->writeDirect(0x0008, ((data & 0x1f) + (memory->readDirect(0x0008) & 0xd0)));
+    memory->writeDirect(TIMER1_CSR, ((data & 0x1f) + (memory->readDirect(TIMER1_CSR) & 0xd0)));
 }
 
 BYTE Cpu::R_timer1_FRC_H()
 {
-    memory->writeDirect(0x0008, (memory->readDirect(0x0008) & 0xdf));
-    return memory->readDirect(0x0009);
+    memory->writeDirect(TIMER1_CSR, (memory->readDirect(TIMER1_CSR) & 0xdf));
+    return memory->readDirect(TIMER1_FRC_h);
 }
 
 void Cpu::W_timer1_FRC_H(BYTE data)
 {
     timer1_Store = data;
-    memory->writeDirect(0x0009, 0xff);
-    memory->writeDirect(0x000a, 0xf8);
+    memory->writeDirect(TIMER1_FRC_h, 0xff);
+    memory->writeDirect(TIMER1_FRC_l, 0xf8);
 }
 
 void Cpu::W_timer1_FRC_L(BYTE data)
 {
-    memory->writeDirect(0x0009, timer1_Store);
-    memory->writeDirect(0x000a, data);
+    memory->writeDirect(TIMER1_FRC_h, timer1_Store);
+    memory->writeDirect(TIMER1_FRC_l, data);
 }
 
 void Cpu::notify_timer1_OCR()
 {
-    memory->writeDirect(0x0008, memory->readDirect(0x0008) & 0xbf);
+    memory->writeDirect(TIMER1_OCR_h, memory->readDirect(TIMER1_OCR_h) & 0xbf);
     // Do this to timer2 too????
 }
 
 void Cpu::W_timer2_CSR(BYTE data)
 {
     checkBits(data, 0x0b);
-    memory->writeDirect(0x000f, ((data & 0x0f) + 0x10 + (memory->readDirect(0x0008) & 0xd0)));
+    memory->writeDirect(TIMER2_CSR, ((data & 0x0f) + 0x10 + (memory->readDirect(TIMER2_CSR) & 0xd0)));
 }
 
 void Cpu::checkInterrupts()
@@ -190,14 +196,14 @@ void Cpu::checkInterrupts()
         if (wai_state & M6800_SLP)
             wai_state &= ~M6800_SLP;
         OCR_waiting = false;
-        doInterrupt(0xfff4);
+        doInterrupt(INTERRUPT_OCR);
     }
     else if (NMI_waiting)
     {
         if (wai_state & M6800_SLP)
             wai_state &= ~M6800_SLP;
         NMI_waiting = false;
-        doInterrupt(0xfffc);
+        doInterrupt(INTERRUPT_NMI);
     }
 }
 
@@ -221,6 +227,8 @@ void Cpu::doInterrupt(ADDRESS interrupt)
 
 void Cpu::reset()
 {
+		// Reset CPU Registers
+		
     //datapak->port2_DDR_W(0xFC);
     memory->writeDirect(0x0008, 0x00);
     memory->writeDirect(0x0009, 0x00);
@@ -234,10 +242,11 @@ void Cpu::reset()
     memory->writeDirect(0x0011, 0x20);
     memory->writeDirect(0x0012, 0x00);
     memory->writeDirect(0x0013, 0x00);
-    BYTE ram = memory->readDirect(0x0014);
-    ram &= 0x80;
-    ram |= 0x7C;
-    memory->writeDirect(0x0014, ram);
+    //BYTE ram = memory->readDirect(0x0014);
+    //ram &= 0x80;
+    //ram |= 0x7C;
+    //memory->writeDirect(0x0014, ram);
+	memory->writeDirect(0x0014, 0x7C);
     //datapak->port6_DDR_W(0x00);
     memory->writeDirect(0x0019, 0xFF);
     memory->writeDirect(0x001A, 0xFF);
@@ -255,7 +264,7 @@ void Cpu::reset()
     wai_state = 0;
     state = CPU_Active;
 
-    WORD_16 tmp = memory->read16(0xfffe);
+    WORD_16 tmp = memory->read16(INTERRUPT_BOOT);
     pc = tmp.w;
 }
 

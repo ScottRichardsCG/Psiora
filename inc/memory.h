@@ -31,6 +31,7 @@ private:
 public:
     Memory();
     void resetBanks();
+	void setPower(bool power);
     void settings(ADDRESS ramLow, ADDRESS ramHigh, int maxRomBanks, int maxRamBanks);
 
     void clearRAM();

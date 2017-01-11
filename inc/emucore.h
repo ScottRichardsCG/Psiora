@@ -1,9 +1,11 @@
 #ifndef EMUCORE_H
 #define EMUCORE_H
 
-#include <QString>
-#include <QThread>
-#include <QMutex>
+#include <string>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include "global.h"
 
 #define FILEIO_ROM_Unknown			0x00
@@ -39,43 +41,48 @@ typedef struct {
     char name[50];
 } STRUCT_settings;
 
-class EmuCore : public QThread
+class EmuCore
 {
 private:
-    void* windowPointer;
-    QMutex mutex;
-    bool killCore;
+	void* windowPointer;
 
-    bool power;
-    int currentMode;
+	bool power;
+	int currentMode;
+	bool romLoaded;
 
-    struct {
-        bool romLoaded;
-        QString romPath;
-        QString ramPath;
-    } fileio;
+	std::string romPath;
+	std::string ramPath;
 
-    void INTERNAL_reset();
-    void INTERNAL_setPower(bool value);
-    int save();
+	std::thread coreThread;
+	std::mutex coreMutex;
+	std::mutex pausedMutex;
+	std::condition_variable pausedWait;
+	std::atomic<bool> killCore;
+	std::atomic<bool> coreAlive;
+	std::atomic<bool> paused;
+	std::atomic<int> emuSpeed;
 
-    void lockCore();
-    void unlockCore();
-protected:
-    void poweroff();
+	void coreRountine();
+
+	void INTERNAL_reset();
+	void INTERNAL_setPower(bool hasPower);
+	//int save();
 
 public:
     explicit EmuCore(void* ptrWindow);
     ~EmuCore();
-    void run();
-    void halt();
+	void startCore();
+	void stopCore();
+	void pause(bool doPause);
 
     bool isPowered();
     void setPower(bool power);
     void hardReset();
 
-    int load(QString filename);
-    int analyseROM(QString filename);
+	int getEmuSpeed();
+
+    int load(std::string filename);
+    int analyseROM(std::string filename);
 };
 
 extern EmuCore *emucore;

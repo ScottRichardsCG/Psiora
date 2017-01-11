@@ -1,4 +1,12 @@
-﻿#include "global.h"
+﻿#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
+#include <string>
+#include <fstream>
+#include <iostream>
+
+#include "global.h"
 #include "emucore.h"
 #include "renderer.h"
 #include "keypad.h"
@@ -7,10 +15,6 @@
 #include "cpu.h"
 #include "lcd.h"
 #include "debug.h"
-#include <QFile>
-#include <QString>
-#include <QElapsedTimer>
-#include <iostream>
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -34,27 +38,28 @@ const STRUCT_settings settings[13] = {
     { 0x0400, 0x7fff, 6, 2, 0, true, 96, "Pos296" }         // Pos296
 };
 
-// ---------------------------------
-// | CONSTRUCTION & DECONSTRUCTION |
-// ---------------------------------
+// ptrWindow contacts a pointer to valid X11 or HWND window object.
 EmuCore::EmuCore(void *ptrWindow)
 {
     windowPointer = ptrWindow;
-    killCore = false;
 }
 
+// Make sure thread has been stopped before we deconstruct object
 EmuCore::~EmuCore() {
+	if (coreThread.joinable()) {
+		stopCore();
+	}
 }
 
-// -------------------------
-// | MAIN EMULATION THREAD |
-// -------------------------
-void EmuCore::run() {
+// Core thread - Note: Run as a seperate thread
+void EmuCore::coreRountine() {
+
+	std::unique_lock<std::mutex> lk(coreMutex);
+
 #ifdef Q_OS_WIN
-    timeBeginPeriod(1);
+	// Increases timing accuracy for windows platform in this thread
+	timeBeginPeriod(1);
 #endif
-    power = false;
-    fileio.romLoaded = false;
 
 #ifdef DEBUG_MODE_ENABLED
     debug = new Debug();
@@ -66,64 +71,100 @@ void EmuCore::run() {
     memory = new Memory();
     cpu = new Cpu();
 
-    std::cerr << "Thread Running\n";
-
-    // Main Loop
-    /* int a = 0;
-    while (!killCore)
-    {
-        a++;
-        std::cerr << "Thread " << a << std::endl;
-        QThread::currentThread()->sleep(1);
-        // some Code
-
-    } */
-
     // Emulation Loop
+	paused = false;
+	power = false;
+	romLoaded = false;
+	coreAlive = true;
+	killCore = false;
+	emuSpeed = 0;
     int busCycles = 0;
     int cursorCycles = 0;
     bool tmpPower = false;
-    QElapsedTimer timer;
-    timer.start();
-    int resync = 46080;
+    int nextSync = 46080;
+	unsigned int emuCyclesPerSecond = 0;
 
-    while (!killCore) {
-        lockCore();
-        busCycles = cpu->doIteration();
-        tmpPower = scic->doIteration(busCycles, power);
-        if (tmpPower != power) {
-            INTERNAL_setPower(tmpPower);
-        }
+	lk.unlock();
 
-        cursorCycles += busCycles;
-        if (cursorCycles >= 46080) {
-            cursorCycles -= 46080;
-            lcd->update(true);
-        }
-        unlockCore();
+	std::chrono::high_resolution_clock::time_point syncTimerStart = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point emuSpeedTimerStart = std::chrono::high_resolution_clock::now();
 
-        resync -= busCycles;
-        if (resync <= 0) {
-            qint64 remaining = SYNC_FRAMES - timer.elapsed();
-            if ((remaining < 0) || (remaining > SYNC_FRAMES)) {
-                // Error in timing, maybe overflow.
-                // Timing invalid and will be ignored
-                resync = SYNC_CYCLES;
-            } else if (remaining < 10) {
-                // Can't always get sleep accuracy lower than 10ms
-                // so accumulate time into next cycle
-                resync += SYNC_CYCLES;
-            } else {
-                // Sleep thread
-                QThread::currentThread()->msleep(remaining);
-                resync = SYNC_CYCLES;
-            }
-            timer.restart();
-        }
+	while (!killCore) {
+		if (paused) {
+			// Paused so wait for a unpause signal to save resources
+			std::unique_lock<std::mutex> lk(pausedMutex);
+			pausedWait.wait(lk);
+			lk.unlock();
+		}
+		else {
+			if (power == false) {
+				// Power is off so just wait for a second and then check wakeups (poweron/acout)
+				// Also emmit NMI signals for counterStage2 in scic
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+				lk.lock();
+				emuSpeed = 100;
+				tmpPower = scic->doIteration(921600, power);
+				if (tmpPower != power) {
+					INTERNAL_setPower(tmpPower);
+				}
+				lk.unlock();
+			}
+			else if (power == true) {
+				lk.lock();
+				busCycles = cpu->doIteration();
+				tmpPower = scic->doIteration(busCycles, power);
+				if (tmpPower != power) {
+					INTERNAL_setPower(tmpPower);
+				}
 
+				cursorCycles += busCycles;
+				if (cursorCycles >= 46080) {
+					cursorCycles -= 46080;
+					lcd->update(true);
+				}
+
+				lk.unlock();
+
+				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+
+				nextSync -= busCycles;
+				if (nextSync <= 0) {
+					std::chrono::milliseconds elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - syncTimerStart);
+					if ((elapsedTime.count() < 0) || (elapsedTime.count() > 50)) {
+						// Error in timing, maybe overflow.
+						// Timing invalid and will be ignored
+						nextSync = SYNC_CYCLES;
+					}
+					else if (elapsedTime.count() >= 45) {
+						// Can't always get sleep accuracy lower enough for this
+						// so accumulate time into next cycle
+						nextSync += SYNC_CYCLES;
+					}
+					else {
+						// Sleep thread
+						nextSync = SYNC_CYCLES;
+						std::this_thread::sleep_for((std::chrono::milliseconds(50) - elapsedTime));
+					}
+					syncTimerStart = std::chrono::high_resolution_clock::now();
+				}
+
+				// Calculate Emulation Speed every second
+				emuCyclesPerSecond += busCycles;
+				std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - emuSpeedTimerStart);
+				if (elapsed.count() >= 1000) {
+					emuSpeed = emuCyclesPerSecond / 9216;
+					emuSpeedTimerStart = std::chrono::high_resolution_clock::now();
+					emuCyclesPerSecond = 0;
+				}
+			}
+		}
     }
 
-    //save();
+	lk.lock();
+
+    //save(); // Not currently implemented but will be here
+
+	coreAlive = false; // Set this to false to tell functions the objects should not be accessed
 
     delete cpu;
     delete memory;
@@ -135,116 +176,135 @@ void EmuCore::run() {
     delete debug;
 #endif
 
+	lk.unlock();
+
 #ifdef Q_OS_WIN
+	// Restore timing accuracies to original
     timeEndPeriod(1);
 #endif
 
-    std::cerr << "Thread Quit\n";
+	return;
 }
 
-// ------------------
-// | THREAD CONTROL |
-// ------------------
+void EmuCore::startCore() {
+	if (coreThread.joinable())
+		return; // Thread already running
 
-void EmuCore::halt() {
-    killCore = true;
-    emucore->wait();
+	coreThread = std::thread(&EmuCore::coreRountine, this);
 }
 
-void EmuCore::lockCore() {
-    mutex.lock();
+void EmuCore::stopCore() {
+	if (!coreThread.joinable())
+		return; // Thread not running
+
+	killCore = true;
+
+	if (paused) {
+		// Core paused so we need to wake it so it can clean up
+		pausedWait.notify_all();
+	}
+
+	coreThread.join();
 }
 
-void EmuCore::unlockCore() {
-    mutex.unlock();
+void EmuCore::pause(bool doPause) {
+	if (paused == doPause)
+		return;
+
+	paused = doPause;
+	if (!paused)
+		pausedWait.notify_all();
 }
 
-// -----------------------------------
-// |      INTERNAL FUNCTIONALITY     |
-// |        NOT THREAD SAFE          |
-// | ONLY CALLED BY EMULATION THREAD |
-// -----------------------------------
-
+// NOT THREAD SAFE
+// This is only called by the core thread to reset emulation state
 void EmuCore::INTERNAL_reset() {
     power = false;
-    lcd->setPower(false);
+	lcd->init();
     memory->resetBanks();
-    cpu->setPower(false);
-    scic->init();
+	cpu->setPower(false);
+	scic->init();
     memory->clearRAM();
+	memory->resetBanks();
 }
 
+// NOT THREAD SAFE
+// This is only called by the core thread to switch virtual devices on and off
 void EmuCore::INTERNAL_setPower(bool value) {
     if (value == power)
         return;
     power = value;
     lcd->setPower(power);
-    if (power)
-        scic->counterInc();
-    memory->resetBanks();
+	scic->setPower(power);
+	memory->setPower(power);
     cpu->setPower(power);
 }
 
-// ------------------------------------
-// |      EXTERNAL FUNCTIONALITY      |
-// |      THREAD SAFE USING MUTEX     |
-// ------------------------------------
+// ---------------------------------------------------
+//  PUBLIC API - Everything below must be thread safe
+// ---------------------------------------------------
 
-bool EmuCore::isPowered() { return power; }
-
-void EmuCore::setPower(bool value) {
-    lockCore();
-    INTERNAL_setPower(value);
-    unlockCore();
+bool EmuCore::isPowered() {
+	std::lock_guard<std::mutex> lk(coreMutex);
+	return power;
+	// Lock released as out of scope
 }
 
-int EmuCore::load(QString filename) {
-    int romType;
-    romType = analyseROM(filename);
-    if (romType == FILEIO_ROM_LoadFail) return romType;
-    if (romType == FILEIO_ROM_Invalid) return romType;
-
-    lockCore();
-
-    lcd->setMode(settings[romType].lcd);
-    memory->settings(settings[romType].ramLow,
-                     settings[romType].ramHigh,
-                     settings[romType].maxRamBanks,
-                     settings[romType].maxRomBanks);
-    currentMode = romType;
-
-    fileio.romPath = filename;
-    fileio.ramPath = filename + ".sav";
-
-    INTERNAL_reset();
-    memory->clearROM();
-    memory->clearRAM();
-
-    QFile file;
-    QByteArray data;
-
-    file.setFileName(fileio.romPath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        unlockCore();
-        return FILEIO_ROM_LoadFail;
-    }
-    data = file.readAll();
-    file.close();
-    memory->writeROM(data.data(), data.size());
-    fileio.romLoaded = true;
-
-    file.setFileName(fileio.ramPath);
-    if (file.open(QIODevice::ReadOnly))
-    {
-        data = file.readAll();
-        file.close();
-        memory->writeRAM(data.data(), data.size());
-    }
-
-    unlockCore();
-    return romType;
+void EmuCore::setPower(bool hasPower) {
+	std::lock_guard<std::mutex> lk(coreMutex);
+	INTERNAL_setPower(hasPower);
+	// Lock released as out of scope
 }
 
+int EmuCore::load(std::string filename) {
+	// Check if the ROM is valid and detect its emulation settings
+	int romType = analyseROM(filename);
+	if (romType == FILEIO_ROM_LoadFail || romType == FILEIO_ROM_Invalid)
+		return romType;
+
+	// Load ROM and RAM data before we apply them to the emulator
+	// If there is an error, we can abort before emulation data is changed or unsaved data lost
+
+	char romTmp[65536] = { 0 };
+	char ramTmp[98304] = { 0 };
+	std::ifstream romStream, ramStream;
+
+	romStream.open(filename, std::ios_base::in | std::ios_base::binary);
+	if (!romStream.good())
+		return FILEIO_ROM_LoadFail;
+	romStream.read(romTmp, 65536);
+	romStream.close();
+
+	// NB: if error opening RAM we just continue with a fresh empty RAM
+	ramStream.open(filename + ".sav", std::ios_base::in | std::ios_base::binary);
+	if (ramStream.good()) {
+		ramStream.read(ramTmp, 98304);
+		ramStream.close();
+	}
+
+	std::lock_guard<std::mutex> lock(coreMutex);
+
+	lcd->setMode(settings[romType].lcd);
+	memory->settings(settings[romType].ramLow,
+		settings[romType].ramHigh,
+		settings[romType].maxRamBanks,
+		settings[romType].maxRomBanks);
+	currentMode = romType;
+
+	romPath = filename;
+	ramPath = filename + ".sav";
+
+	INTERNAL_reset();
+	memory->clearROM();
+	memory->clearRAM();
+
+	memory->writeROM(romTmp, 65536);
+	memory->writeRAM(ramTmp, 98304);
+
+	return romType;
+}
+
+/*
 int EmuCore::save() {
     if (!fileio.romLoaded) return FILEIO_SUCCESS;
 
@@ -258,30 +318,31 @@ int EmuCore::save() {
     file.write(QByteArray(ram, len));
     file.close();
     return FILEIO_SUCCESS;
-}
+}*/
 
-int EmuCore::analyseROM(QString filename) {
-    int preset;
-    BYTE modeByte;
-    QFile file;
-    QByteArray romData;
+// This function analyses a ROM file and returns its intended hardware setup
+int EmuCore::analyseROM(std::string filename) {
+	int preset, romSize;
+	std::ifstream romStream;
+	romStream.open(filename, std::ios_base::in | std::ios_base::binary);
+	if (!romStream.good())
+		return FILEIO_ROM_LoadFail;
 
-    file.setFileName(filename);
-    if (!file.open(QIODevice::ReadOnly)) {
-        return FILEIO_ROM_LoadFail;
-    }
-    romData = file.readAll();
-    file.close();
-    if (romData.size() != 32768 && romData.size() != 65536) {
-        return FILEIO_ROM_Invalid;
-    }
+	romStream.seekg(0, std::ios_base::end);
+	romSize = romStream.tellg();
+	if (romSize != 32768 && romSize != 65536)
+		return FILEIO_ROM_Invalid;
 
-    modeByte = romData.data()[0x7fe8];
+	romStream.seekg(0x7FE8);
+
+	BYTE modeByte = romStream.get();
+	romStream.close();
+
     switch (modeByte) {
     case 0x00:  preset = FILEIO_ROM_CM;       break;
     case 0x01:  preset = FILEIO_ROM_XP;       break;
     case 0x02:
-        if (romData.size() == 32768)
+        if (romSize == 32768)
             preset = FILEIO_ROM_LA;
         else
             preset = FILEIO_ROM_MLA;
@@ -298,9 +359,14 @@ int EmuCore::analyseROM(QString filename) {
     return preset;
 }
 
-
 void EmuCore::hardReset() {
-    lockCore();
+	std::lock_guard<std::mutex> lk(coreMutex);
     INTERNAL_reset();
-    unlockCore();
+	// Lock released when out of scope
+}
+
+int EmuCore::getEmuSpeed() {
+	// emuSpeed is cloned otherwise a write could change the value during these 3 read operations
+	int val = emuSpeed;
+	return val < 0 ? 0 : val > 100 ? 100 : val;
 }

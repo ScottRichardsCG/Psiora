@@ -50,21 +50,21 @@ Debug *debug;
 Debug::Debug()
 {
     logFile = fopen("debug.log", "w+");
-    if (!logFile) {
-        logOpen = false;
-    } else {
-        logOpen = true;
-    }
 #ifdef DEBUG_MODE_ENABLED_CPU
-    ignoreCmd = 47290; //CM Stop RAM check at 47290
+	logFileCPU = fopen("debug_cpu.log", "w+");
+	ignoreCmd = 0;
+    //ignoreCmd = 47290; //CM Stop RAM check at 47290
     breakPoint = 0; //10000;
 #endif
 }
 
 Debug::~Debug() {
-    if (logOpen) {
-        fclose(logFile);
-    }
+	if (logFile)
+		fclose(logFile);
+#ifdef DEBUG_MODE_ENABLED_CPU
+	if (logFileCPU)
+		fclose(logFileCPU);
+#endif
 }
 
 void Debug::writeOutput(char *log) {
@@ -72,9 +72,8 @@ void Debug::writeOutput(char *log) {
 }
 
 void Debug::writeLog(char *log) {
-    if (logOpen) {
+    if (logFile)
         fprintf(logFile, "%s\n", log);
-    }
 }
 
 #ifdef DEBUG_MODE_ENABLED_CPU
@@ -82,13 +81,13 @@ void Debug::writeCPU_1_0(ADDRESS pc, BYTE op) {
     if (ignoreCmd != 0) {
         return;
     }
-    if (logOpen) {
+    if logFileCPU) {
         char opname[9];
         char tmp[32];
         sprintf(tmp, "%s        ", opcode_name[op]);
         strncpy(opname, tmp, 8);
         opname[8] = '\0';
-        fprintf(logFile, "%04X> %s()     ", pc, opname);
+        fprintf(logFileCPU, "%04X> %s()     ", pc, opname);
     }
 }
 
@@ -96,13 +95,13 @@ void Debug::writeCPU_1_8(ADDRESS pc, BYTE op, BYTE operand) {
     if (ignoreCmd != 0) {
         return;
     }
-    if (logOpen) {
+    if (logFileCPU) {
         char opname[9];
         char tmp[32];
         sprintf(tmp, "%s        ", opcode_name[op]);
         strncpy(opname, tmp, 8);
         opname[8] = '\0';
-        fprintf(logFile, "%04X> %s(%02X)   ", pc, opname, operand);
+        fprintf(logFileCPU, "%04X> %s(%02X)   ", pc, opname, operand);
     }
 }
 
@@ -110,13 +109,13 @@ void Debug::writeCPU_1_16(ADDRESS pc, BYTE op, WORD_16 operand) {
     if (ignoreCmd != 0) {
         return;
     }
-    if (logOpen) {
+    if (logFileCPU) {
         char opname[9];
         char tmp[32];
         sprintf(tmp, "%s        ", opcode_name[op]);
         strncpy(opname, tmp, 8);
         opname[8] = '\0';
-        fprintf(logFile, "%04X> %s(%04X) ", pc, opname, operand.w);
+        fprintf(logFileCPU, "%04X> %s(%04X) ", pc, opname, operand.w);
     }
 }
 
@@ -141,7 +140,7 @@ void Debug::writeCPU_2(WORD_16 D, WORD_16 X, ADDRESS SP, BYTE CCR) {
            memTmp[0]++; // To stop unused variable warnings
         }
     }
-    if (logOpen) {
+    if (logFileCPU) {
         char debug_CCR[9];
         debug_CCR[0] = ((CCR & 0x80) / 0x80) * 49;
         debug_CCR[1] = ((CCR & 0x40) / 0x40) * 49;
@@ -158,7 +157,7 @@ void Debug::writeCPU_2(WORD_16 D, WORD_16 X, ADDRESS SP, BYTE CCR) {
                 debug_CCR[a] = 45;
         }
 
-        fprintf(logFile, "%04X %04X %04X %s\n", D.w, X.w, SP, debug_CCR);
+        fprintf(logFileCPU, "%04X %04X %04X %s\n", D.w, X.w, SP, debug_CCR);
     }
 }
 #endif

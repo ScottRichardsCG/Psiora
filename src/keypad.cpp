@@ -1,35 +1,25 @@
 #include "keypad.h"
 #include "global.h"
 #include "emucore.h"
-//#include "memory.h"
-
+#include "memory.h"
 #include <cstring>
 
 Keypad *keypad;
 
-#define keyActive(psioraKey) \
-    line[keyPadBits[psioraKey].k] &= (0xff-keyPadBits[psioraKey].p5)
-
-#define LCK(key1, key2) \
-    if (state[key1]) { caps=false; keyActive(key2); }
-
-#define UCK(key1, key2) \
-    if (state[key1]) { caps=true; keyActive(key2); }
-
-#define NCK(key1, key2) \
-    if (state[key1]) keyActive(key2);
-
-#define SCK(key1, key2) \
-    if (state[key1]) { keyActive(KEY_SHIFT); keyActive(key2); }
+#define keyActive(psioraKey) line[keyPadBits[psioraKey].k] &= (0xff-keyPadBits[psioraKey].p5)
+#define LCK(key1, key2) if (state[key1]) { caps = false; keyActive(key2); }
+#define UCK(key1, key2) if (state[key1]) { caps = true; keyActive(key2); }
+#define NCK(key1, key2) if (state[key1]) { keyActive(key2); }
+#define SCK(key1, key2) if (state[key1]) { keyActive(KEY_SHIFT); keyActive(key2); }
 
 static const keyboard_keys keyPadBits[36] = {
-    { 0, 0x00 },
-    { 2, 0x40 }, { 3, 0x40 }, { 4, 0x40 }, { 7, 0x40 }, { 5, 0x40 }, { 6, 0x40 },
-    { 2, 0x20 }, { 3, 0x20 }, { 4, 0x20 }, { 7, 0x20 }, { 5, 0x20 }, { 6, 0x20 },
-    { 2, 0x10 }, { 3, 0x10 }, { 4, 0x10 }, { 7, 0x10 }, { 5, 0x10 }, { 6, 0x10 },
-    { 2, 0x08 }, { 3, 0x08 }, { 4, 0x08 }, { 7, 0x08 }, { 5, 0x08 }, { 6, 0x08 },
-    { 4, 0x04 }, { 7, 0x04 }, { 2, 0x04 }, { 3, 0x04 }, { 5, 0x04 }, { 6, 0x04 },
-    { 1, 0x04 }, { 1, 0x08 }, { 1, 0x20 }, { 1, 0x40 }, { 1, 0x10 }
+	{ 0, 0x00 },
+	{ 2, 0x40 },{ 3, 0x40 },{ 4, 0x40 },{ 7, 0x40 },{ 5, 0x40 },{ 6, 0x40 },
+	{ 2, 0x20 },{ 3, 0x20 },{ 4, 0x20 },{ 7, 0x20 },{ 5, 0x20 },{ 6, 0x20 },
+	{ 2, 0x10 },{ 3, 0x10 },{ 4, 0x10 },{ 7, 0x10 },{ 5, 0x10 },{ 6, 0x10 },
+	{ 2, 0x08 },{ 3, 0x08 },{ 4, 0x08 },{ 7, 0x08 },{ 5, 0x08 },{ 6, 0x08 },
+	{ 4, 0x04 },{ 7, 0x04 },{ 2, 0x04 },{ 3, 0x04 },{ 5, 0x04 },{ 6, 0x04 },
+	{ 1, 0x04 },{ 1, 0x08 },{ 1, 0x20 },{ 1, 0x40 },{ 1, 0x10 }
 };
 
 Keypad::Keypad()
@@ -57,7 +47,7 @@ void Keypad::keyDown(int key)
     }
 }
 
-void Keypad::keyUp()
+void Keypad::keyUp(int key)
 {
     memset(state, 0x00, 65536);
 }
@@ -71,17 +61,17 @@ bool Keypad::isOnClearPressed()
     return false;
 }
 
-BYTE Keypad::activeKeyLines(BYTE stage2)
+BYTE Keypad::activeKeyLines(unsigned int stage2)
 {
-    memset(line, 0xff, 8);
+	line[0] = 0xff; line[1] = 0xff; line[2] = 0xff; line[3] = 0xff;
+	line[4] = 0xff; line[5] = 0xff; line[6] = 0xff; line[7] = 0xff;
 
     // FORCE KEYSTAT (Caps Lock, Num Lock off)
-    //BYTE tmpLck = memory_getCapsLockByte();
-    BYTE tmpLck = 0;
+	BYTE tmpLck = memory->readDirect(0x007B);	// Read Caps Lock value
     tmpLck &= 0xbe;
     if (!caps)
         tmpLck++;
-    //memory_setCapsLockByte(tmpLck);
+	memory->writeDirect(0x007B, tmpLck); // Write Caps Lock value
 
     // IMPORTANT
     // DO NOT CAPTURE SHIFT KEYS
@@ -124,13 +114,14 @@ BYTE Keypad::activeKeyLines(BYTE stage2)
     LCK('z', KEY_Z);    UCK('Z', KEY_Z);    SCK('.', KEY_Z);
 
     BYTE ret = 0x7c;
-    if (!(stage2 & 0x01)) { ret &= line[1]; }
-    if (!(stage2 & 0x02)) { ret &= line[2]; }
-    if (!(stage2 & 0x04)) { ret &= line[3]; }
-    if (!(stage2 & 0x08)) { ret &= line[4]; }
-    if (!(stage2 & 0x10)) { ret &= line[5]; }
-    if (!(stage2 & 0x20)) { ret &= line[6]; }
-    if (!(stage2 & 0x40)) { ret &= line[7]; }
-    if (state[KEYSTATE_F1] != 0) { ret |= 0x80; }
-    return ret;
+    if (!(stage2 & 0x01)) { ret &= line[0]; }
+    if (!(stage2 & 0x02)) { ret &= line[1]; }
+    if (!(stage2 & 0x04)) { ret &= line[2]; }
+    if (!(stage2 & 0x08)) { ret &= line[3]; }
+    if (!(stage2 & 0x10)) { ret &= line[4]; }
+    if (!(stage2 & 0x20)) { ret &= line[5]; }
+    if (!(stage2 & 0x40)) { ret &= line[6]; }
+    if (state[KEYSTATE_F1]) { ret |= 0x80; }
+
+	return ret;
 }

@@ -32,6 +32,7 @@ private:
 
 public:
     Lcd();
+	void init();
 
     void update(bool progressTime);
     void setMode(int mode);

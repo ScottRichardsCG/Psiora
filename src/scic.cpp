@@ -1,7 +1,7 @@
 #include "scic.h"
 #include "global.h"
 #include "keypad.h"
-//#include "cpu.h"
+#include "cpu.h"
 
 Scic *scic;
 
@@ -12,6 +12,15 @@ void Scic::init()
     NMItoCPU = false;
     acout = false;
     pulse = false;
+}
+
+void Scic::setPower(bool power) {
+	if (power) {
+		counterInc();
+	}
+	else {
+		setNMItoCPU(false);
+	}
 }
 
 // Switch alarm on and off. Would control buzzer, but not
@@ -38,8 +47,14 @@ void Scic::setNMItoCPU(bool value)
 void Scic::counterInc()
 {
     stage2++;
-    if (stage2 >= 0x1000) stage2 = 0;
-    acout = (stage2 >= 0x0800);
+	if (stage2 >= 0x1000) { stage2 = 0; }
+
+	if (stage2 & 0x800) {
+		acout = true;
+	}
+	else {
+		acout = false;
+	}
 }
 
 void Scic::counterReset()
@@ -47,6 +62,9 @@ void Scic::counterReset()
     stage2 = 0;
 }
 
+void Scic::switchOff() {
+	doSwitchOff = true;
+}
 
 // Read on line Port 5. Returns current acout, pulse and
 // keyboard state taking in to account current counter value.
@@ -61,12 +79,22 @@ BYTE Scic::R_port5()
 bool Scic::doIteration(int cycles, bool powered)
 {
     nextNMI -= cycles;
-    if (nextNMI < 0)
-    {
-        nextNMI += 921600;
-        if (NMItoCPU) nextNMI++; //cpu->notify_NMI();
-        else counterInc();
+	if (nextNMI < 0)
+	{
+		nextNMI += 921600;
+		if (NMItoCPU) {
+			nextNMI++;
+			cpu->notify_NMI();
+		}
+		else {
+			counterInc();
+		}
     }
+
+	if (doSwitchOff) {
+		doSwitchOff = false;
+		return false; // Tell emulator psion is now switched off
+	}
 
     if (acout) return true;
     else if (keypad->isOnClearPressed()) return true;

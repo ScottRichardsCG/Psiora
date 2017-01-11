@@ -27,6 +27,12 @@ void Memory::clearROM() { memset(rom.data, 0x00, 65536); }
 void Memory::writeROM(char *bin, int size) { memcpy(rom.data, bin, size); }
 void Memory::readROM(char *bin, int size) { memcpy(bin, rom.data, size); }
 
+void Memory::setPower(bool power) {
+	if (power = false) {
+		resetBanks();
+	}
+}
+
 // Control current RAM and ROM banks
 void Memory::resetBanks()
 {
@@ -141,18 +147,18 @@ void Memory::triggerHardware(ADDRESS address)
 {
     switch (address & 65504)
     {
-    case 0x01c0: emucore->setPower(false);	break;
-    case 0x0200: scic->setPulse(true);		break;
-    case 0x0240: scic->setPulse(false);		break;
-    case 0x0280: break; //datapak->setV21(true); 	break;
-    case 0x02c0: break; //datapak->setV21(false);	break;
-    case 0x0300: scic->counterReset();		break;
-    case 0x0340: scic->counterInc();		break;
-    case 0x0360: resetBanks();      		break;
-    case 0x0380: scic->setNMItoCPU(true);      break;
-    case 0x03a0: nextRamBank();				break;
-    case 0x03c0: scic->setNMItoCPU(false); 	break;
-    case 0x03e0: nextRomBank();             break;
+	case 0x01c0: scic->switchOff();						break;
+    case 0x0200: scic->setPulse(true);					break;
+    case 0x0240: scic->setPulse(false);					break;
+    case 0x0280: break; //datapak->setV21(true);		break;
+    case 0x02c0: break; //datapak->setV21(false);		break;
+    case 0x0300: scic->counterReset();					break;
+    case 0x0340: scic->counterInc();					break;
+    case 0x0360: resetBanks();      					break;
+    case 0x0380: scic->setNMItoCPU(true);			    break;
+    case 0x03a0: nextRamBank();							break;
+    case 0x03c0: scic->setNMItoCPU(false);				break;
+    case 0x03e0: nextRomBank();						    break;
     }
 }
 

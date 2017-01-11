@@ -12,13 +12,16 @@ private:
     bool pulse;
     bool alarm;
     unsigned int stage2;
+	bool doSwitchOff;
 public:
     void init();
+	void setPower(bool power);
     void setAlarm(bool value);
     void setPulse(bool value);
     void setNMItoCPU(bool value);
     void counterInc();
     void counterReset();
+	void switchOff();
     BYTE R_port5();
     bool doIteration(int cycles, bool powered);
 };

@@ -31,7 +31,6 @@ void Cpu::wai() {
     checkInterrupts();
 }
 void Cpu::swi(BYTE) {
-    pc--; // This OS will check the byte after PC to get the command called
     pushAddr(pc);
     pushWord(accX);
     pushByte(accA);

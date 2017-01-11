@@ -2,9 +2,10 @@
 #define GLOBAL_H
 
 // Debug control
-//#define DEBUG_MODE_ENABLED
+#define DEBUG_MODE_ENABLED
+
 #ifdef DEBUG_MODE_ENABLED
-#define DEBUG_MODE_ENABLED_CPU
+//#define DEBUG_MODE_ENABLED_CPU
 #endif
 
 // Endian

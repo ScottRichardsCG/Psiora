@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "SDL/SDL.h"
+#include "SDL.h" // SDL2
 #include <QString>
 
 #define RENDERER_ERR_OKAY           0x00
@@ -17,16 +17,19 @@ typedef struct {
 } Drawing_Rect;
 
 SDL_Surface* resourceToSurface(QString filePath);
-int keyboardFilter(const SDL_Event *event);
 
 class Renderer
 {
 private:
     void* windowId;
-    SDL_Surface *canvas;
-    SDL_Surface *splash;
-    SDL_Surface *font[2][256];
-    SDL_Surface *udgFont[32];
+
+	SDL_Window *window;
+	SDL_Renderer *render;
+	SDL_Texture *splash;
+	SDL_Texture *font[2][256];
+	SDL_Surface *udgSurf[8];
+	SDL_Surface *udgFont[32];
+
     int errorCode;
 
     void setError(int code);

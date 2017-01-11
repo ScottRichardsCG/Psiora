@@ -11,11 +11,11 @@ int main(int argc, char *argv[])
     mainWin.show();
 
     emucore = new EmuCore(mainWin.getDrawingArea());
-    emucore->start();
+    emucore->startCore();
 
     app.exec();
 
-    emucore->halt();
+    emucore->stopCore();
     delete emucore;
 
     return 0;

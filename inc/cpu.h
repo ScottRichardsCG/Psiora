@@ -288,10 +288,10 @@ extern Cpu *cpu;
 /******************************************/
 #define pullByte() memory->read(stackAddr+1); stackAddr++
 #define pullWord() memory->read16(stackAddr+1); stackAddr+=2
-#define pullAddr() memory->readAddress(stackAddr+1); stackAddr+=2;
+#define pullAddr() memory->readAddress(stackAddr+1); stackAddr+=2
 #define pushByte(data) memory->write(stackAddr, data); stackAddr--
 #define pushWord(data) memory->write16(stackAddr-1, data); stackAddr-=2
-#define pushAddr(data) memory->writeAddress(stackAddr-1, data); stackAddr-=2;
+#define pushAddr(data) memory->writeAddress(stackAddr-1, data); stackAddr-=2
 
 /******************************************/
 /** Condition Control Register           **/
