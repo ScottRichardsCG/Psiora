@@ -4,6 +4,8 @@
 
 Renderer *renderer;
 
+// Load a BMP image from a QT resource and extract its
+// data into a SDL_Surface for use
 SDL_Surface* resourceToSurface(QString filePath)
 {
 	QFile file(filePath);
@@ -22,6 +24,9 @@ Renderer::Renderer(void* ptrWindow)
 		setError(RENDERER_ERR_SDLINIT);
 		return;
 	}
+
+	// If a window (X11 or HWND) was not provided, then create our own seperate
+	// window to render into.
 	if (ptrWindow == NULL) {
 		fprintf(stderr, "SDL_ No valid window pointer. Making our own window\n");
 		setError(RENDERER_ERR_DISPLAY);
@@ -32,9 +37,13 @@ Renderer::Renderer(void* ptrWindow)
 		window = SDL_CreateWindowFrom(ptrWindow);
 		render = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 	}
+
+	// The psion has a pixelated display normally and we want to keep it that way,
+	// so all smooth scaling is turned off.
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	SDL_RenderSetLogicalSize(render, 504, 170);
 
+	// Convert all resources into Surfaces and ensure they have loaded correctly
 	SDL_Surface *splashSurf = resourceToSurface(":gfx/Splash");
     SDL_Surface *fontxp = resourceToSurface(":gfx/HD44780_Font");
     SDL_Surface *fontlz = resourceToSurface(":gfx/HD66780_Font");
