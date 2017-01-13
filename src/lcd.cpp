@@ -130,9 +130,7 @@ void Lcd::update(bool progressTime) {
     if (ram.addr < 0x80) {
         if (virtPos[mode][ram.addr].x != 0) {
             if (cursor.type == 0 && cursor.underline == true) {
-                Drawing_Rect rect = { virtPos[mode][ram.addr].x,
-                    virtPos[mode][ram.addr].y + 27,
-                    20, 4 };
+                Drawing_Rect rect = { virtPos[mode][ram.addr].x, Sint16(virtPos[mode][ram.addr].y + 27), 20, 4 };
                 renderer->drawRect(&rect, 0, 0, 0);
             }
             else if (cursor.type == 1 && cursor.block == true) {
