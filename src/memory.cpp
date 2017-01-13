@@ -28,7 +28,7 @@ void Memory::writeROM(char *bin, int size) { memcpy(rom.data, bin, size); }
 void Memory::readROM(char *bin, int size) { memcpy(bin, rom.data, size); }
 
 void Memory::setPower(bool power) {
-	if (power = false) {
+    if (power == false) {
 		resetBanks();
 	}
 }
