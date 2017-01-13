@@ -9,7 +9,7 @@ Please let me know if it works for you.
 
 ## Requirements
 
-Psiora requires SDL 2.0.5 and QT5
+Psiora requires SDL 2 and QT5
 
 ## Compiling (Windows and Linux)
 
@@ -20,7 +20,8 @@ You may need to change the paths in "psiora.pro" to your library paths on window
 Alternatively you can build the program with qmake.
 
 ```bash
-git clone https://github.com/scottrichardscg/psiora.git
+git clone https://github.com/scottrichardscg/psiora.git psiora
+cd psiora
 qmake psiora.pro
 make all
 ```
