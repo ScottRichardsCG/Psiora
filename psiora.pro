@@ -28,8 +28,9 @@ win32-msvc*:LIBS += winmm.lib
 win32-msvc*:LIBS += C:/Devel/SDL-devel-1.2.15-VC/lib/x86/SDL.lib
 
 #Include SDL1.2 - Unix
-unix:LIBS += `sdl-config --libs`
-unix:QMAKE_CXXFLAGS += `sdl-config --cflags`
+unix:INCLUDEPATH += /usr/include/SDL2
+unix:LIBS += -L/usr/lib/x86_64-linux-gnu -lSDL2
+unix:QMAKE_CXXFLAGS += -I/usr/include/SDL2 -D_REENTRANT -std=c++11
 unix:QMAKE_CXXFLAGS -= "-Dmain=SDL_main"
 
 INCLUDEPATH += inc/ src/

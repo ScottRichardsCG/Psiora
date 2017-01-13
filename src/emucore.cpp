@@ -42,24 +42,6 @@ const STRUCT_settings settings[13] = {
 EmuCore::EmuCore(void *ptrWindow)
 {
     windowPointer = ptrWindow;
-}
-
-// Make sure thread has been stopped before we deconstruct object
-EmuCore::~EmuCore() {
-	if (coreThread.joinable()) {
-		stopCore();
-	}
-}
-
-// Core thread - Note: Run as a seperate thread
-void EmuCore::coreRountine() {
-
-	std::unique_lock<std::mutex> lk(coreMutex);
-
-#ifdef Q_OS_WIN
-	// Increases timing accuracy for windows platform in this thread
-	timeBeginPeriod(1);
-#endif
 
 #ifdef DEBUG_MODE_ENABLED
     debug = new Debug();
@@ -71,6 +53,34 @@ void EmuCore::coreRountine() {
     memory = new Memory();
     cpu = new Cpu();
 
+}
+
+// Make sure thread has been stopped before we deconstruct object
+EmuCore::~EmuCore() {
+	if (coreThread.joinable()) {
+		stopCore();
+	}
+
+    delete cpu;
+    delete memory;
+    delete keypad;
+    delete scic;
+    delete lcd;
+    delete renderer;
+#ifdef DEBUG_MODE_ENABLED
+    delete debug;
+#endif
+}
+
+// Core thread - Note: Run as a seperate thread
+void EmuCore::coreRountine() {
+
+	std::unique_lock<std::mutex> lk(coreMutex);
+
+#ifdef Q_OS_WIN
+	// Increases timing accuracy for windows platform in this thread
+	timeBeginPeriod(1);
+#endif
     // Emulation Loop
 	paused = false;
 	power = false;
@@ -165,16 +175,6 @@ void EmuCore::coreRountine() {
     //save(); // Not currently implemented but will be here
 
 	coreAlive = false; // Set this to false to tell functions the objects should not be accessed
-
-    delete cpu;
-    delete memory;
-    delete keypad;
-    delete scic;
-    delete lcd;
-    delete renderer;
-#ifdef DEBUG_MODE_ENABLED
-    delete debug;
-#endif
 
 	lk.unlock();
 
