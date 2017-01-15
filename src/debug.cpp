@@ -81,7 +81,7 @@ void Debug::writeCPU_1_0(ADDRESS pc, BYTE op) {
     if (ignoreCmd != 0) {
         return;
     }
-    if logFileCPU) {
+    if (logFileCPU) {
         char opname[9];
         char tmp[32];
         sprintf(tmp, "%s        ", opcode_name[op]);
