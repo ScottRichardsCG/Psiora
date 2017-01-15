@@ -62,12 +62,12 @@ Lcd::Lcd()
         }
     }
 
+	mode = 0; // Default to HD44780 - 2 Line mode
 	init();
 }
 
 void Lcd::init() {
 	power = false;
-	mode = 0;
 	memset(ram.data, 0, 196);
 	ram.addr = 0;
 	ram.direction = 1;
