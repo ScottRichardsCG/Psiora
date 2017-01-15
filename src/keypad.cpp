@@ -63,8 +63,7 @@ bool Keypad::isOnClearPressed()
 
 BYTE Keypad::activeKeyLines(unsigned int stage2)
 {
-	line[0] = 0xff; line[1] = 0xff; line[2] = 0xff; line[3] = 0xff;
-	line[4] = 0xff; line[5] = 0xff; line[6] = 0xff; line[7] = 0xff;
+	memset(line, 0xff, 8);
 
     // FORCE KEYSTAT (Caps Lock, Num Lock off)
 	BYTE tmpLck = memory->readDirect(0x007B);	// Read Caps Lock value
@@ -114,13 +113,13 @@ BYTE Keypad::activeKeyLines(unsigned int stage2)
     LCK('z', KEY_Z);    UCK('Z', KEY_Z);    SCK('.', KEY_Z);
 
     BYTE ret = 0x7c;
-    if (!(stage2 & 0x01)) { ret &= line[0]; }
-    if (!(stage2 & 0x02)) { ret &= line[1]; }
-    if (!(stage2 & 0x04)) { ret &= line[2]; }
-    if (!(stage2 & 0x08)) { ret &= line[3]; }
-    if (!(stage2 & 0x10)) { ret &= line[4]; }
-    if (!(stage2 & 0x20)) { ret &= line[5]; }
-    if (!(stage2 & 0x40)) { ret &= line[6]; }
+    if (!(stage2 & 0x01)) { ret &= line[1]; }
+    if (!(stage2 & 0x02)) { ret &= line[2]; }
+    if (!(stage2 & 0x04)) { ret &= line[3]; }
+    if (!(stage2 & 0x08)) { ret &= line[4]; }
+    if (!(stage2 & 0x10)) { ret &= line[5]; }
+    if (!(stage2 & 0x20)) { ret &= line[6]; }
+    if (!(stage2 & 0x40)) { ret &= line[7]; }
     if (state[KEYSTATE_F1]) { ret |= 0x80; }
 
 	return ret;

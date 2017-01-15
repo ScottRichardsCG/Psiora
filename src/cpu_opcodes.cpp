@@ -535,10 +535,10 @@ void Cpu::tstb() {
     CLR_NZVC; SET_NZ8(accB);
 }
 void Cpu::tst_ix(BYTE operand) {
-    CLR_NZVC; SET_NZ8(memory->read(accX.w+operand));
+	CLR_NZVC; BYTE val = memory->read(accX.w + operand); SET_NZ8(val);
 }
 void Cpu::tst_ex(WORD_16 operand) {
-    CLR_NZVC; SET_NZ8(memory->read(operand.w));
+	CLR_NZVC; BYTE val = memory->read(operand.w); SET_NZ8(val);
 }
 void Cpu::bita_im(BYTE operand) {
     BYTE r = accA & operand;

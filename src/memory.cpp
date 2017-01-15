@@ -9,6 +9,9 @@ Memory *memory;
 
 Memory::Memory()
 {
+	clearRAM();
+	clearROM();
+	resetBanks();
 }
 
 void Memory::settings(ADDRESS ramLow, ADDRESS ramHigh, int maxRomBanks, int maxRamBanks)
@@ -43,7 +46,7 @@ void Memory::resetBanks()
 void Memory::nextRamBank()
 {
     ram.page++;
-    if (ram.page >= ram.maxPage)
+    if (ram.page >= (ram.maxPage-1))
     {
         ram.page = 0;
     }
@@ -52,7 +55,7 @@ void Memory::nextRamBank()
 void Memory::nextRomBank()
 {
     rom.page++;
-    if (rom.page >= rom.maxPage)
+    if (rom.page >= (rom.maxPage-1))
     {
         rom.page = 0;
     }
@@ -180,7 +183,7 @@ BYTE Memory::readDirect(ADDRESS address)
         case 2: return rom.data[address + 0x4000];
         }
     }
-    else if (address >= 0xc000)
+    else if (address >= 0xc000 && address <= 0xffff)
         return rom.data[address - 0x8000];
     return 0;
 }
