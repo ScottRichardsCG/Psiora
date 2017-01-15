@@ -30,12 +30,12 @@ const STRUCT_settings settings[13] = {
     { 0x0400, 0x7fff, 4, 2, 0, false, 32, "MLA" },          // MLA
     { 0x2000, 0x5fff, 2, 2, 0, false, 16, "POS200" },       // Pos200 -- Pos200 XP?
     { 0x0400, 0x7fff, 2, 2, 0, true, 32, "POS250" },        // Pos250 -- Pos200 LA?
-    { 0x0400, 0x7fff, 6, 2, 0, false, 96, "POS350" },       // Pos350
+    { 0x0400, 0x7fff, 2, 6, 0, false, 96, "POS350" },       // Pos350
     { 0x0400, 0x7fff, 4, 2, 1, false, 32, "LZ" },           // LZ
     { 0x0400, 0x7fff, 4, 4, 1, false, 64, "LZ64" },         // LP (LZ64)
     { 0x0400, 0x7fff, 2, 4, 1, false, 32, "POS432" },       // Pos432
     { 0x0400, 0x7fff, 4, 4, 1, false, 64, "POS464" },       // Pos464
-    { 0x0400, 0x7fff, 6, 2, 0, true, 96, "Pos296" }         // Pos296
+    { 0x0400, 0x7fff, 2, 6, 0, true, 96, "Pos296" }         // Pos296
 };
 
 // ptrWindow contacts a pointer to valid X11 or HWND window object.
@@ -287,8 +287,8 @@ int EmuCore::load(std::string filename) {
 	lcd->setMode(settings[romType].lcd);
 	memory->settings(settings[romType].ramLow,
 		settings[romType].ramHigh,
-		settings[romType].maxRamBanks,
-		settings[romType].maxRomBanks);
+		settings[romType].maxRomBanks,
+		settings[romType].maxRamBanks);
 	currentMode = romType;
 
 	romPath = filename;
