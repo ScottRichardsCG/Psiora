@@ -229,7 +229,7 @@ void Cpu::reset()
 {
 		// Reset CPU Registers
 		
-    //datapak->port2_DDR_W(0xFC);
+	memory->write(0x0001, 0xFC);
     memory->writeDirect(0x0008, 0x00);
     memory->writeDirect(0x0009, 0x00);
     memory->writeDirect(0x000a, 0x00);
@@ -243,11 +243,9 @@ void Cpu::reset()
     memory->writeDirect(0x0012, 0x00);
     memory->writeDirect(0x0013, 0x00);
     BYTE ram = memory->readDirect(0x0014);
-    ram &= 0x80;
-    ram |= 0x7C;
+	ram |= 0x7C;
     memory->writeDirect(0x0014, ram);
-	memory->writeDirect(0x0014, 0x7C);
-    //datapak->port6_DDR_W(0x00);
+	memory->write(0x0016, 0x00);
     memory->writeDirect(0x0019, 0xFF);
     memory->writeDirect(0x001A, 0xFF);
     memory->writeDirect(0x001B, 0x20);
