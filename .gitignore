@@ -1,7 +1,6 @@
 build-*/
 Makefile
-Psiora.pro.user*
-debug_output.log
+*.pro.user
 psiora.exe
 psiora
 debug/*
@@ -10,3 +9,4 @@ Win32/*
 *.log
 *.VC.opendb
 *.VC.db
+*.vcxproj.user
