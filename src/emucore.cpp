@@ -14,6 +14,7 @@
 #include "scic.h"
 #include "cpu.h"
 #include "lcd.h"
+#include "datapak.h"
 #include "debug.h"
 
 #ifdef Q_OS_WIN
@@ -50,6 +51,7 @@ EmuCore::EmuCore(void *ptrWindow)
     lcd = new Lcd();
     keypad = new Keypad();
     scic = new Scic();
+	datapak = new Datapak();
     memory = new Memory();
     cpu = new Cpu();
 
@@ -65,6 +67,7 @@ EmuCore::~EmuCore() {
     delete memory;
     delete keypad;
     delete scic;
+	delete datapak;
     delete lcd;
     delete renderer;
 #ifdef DEBUG_MODE_ENABLED

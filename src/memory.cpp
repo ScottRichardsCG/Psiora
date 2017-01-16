@@ -1,9 +1,11 @@
+#include <cstring>
+
 #include "memory.h"
 #include "emucore.h"
 #include "scic.h"
 #include "cpu.h"
 #include "lcd.h"
-#include <iostream>
+#include "datapak.h"
 
 Memory *memory;
 
@@ -66,30 +68,30 @@ BYTE Memory::readCPU(ADDRESS address)
 {
     switch (address)
     {
-    case 0x0002: return 0;                      /// Port1 - Low Addr Bus - DoNotUse
-    //case 0x0003: return datapak->R_port2();
-    case 0x0006: return 0;                      /// Port3 - Data Bus - DoNotUse
-    case 0x0007: return 0;                      /// Port4 - High Addr Bus - DoNotUse
-    case 0x0008: return ram.data[0x0008];
-    case 0x0009: return cpu->R_timer1_FRC_H();
-    case 0x000a: return ram.data[0x000a];
-    case 0x000b: return ram.data[0x000b];
-    case 0x000c: return ram.data[0x000c];
-    case 0x000d: return 0;                      /// Input capture register???
-    case 0x000e: return 0;                      /// Input capture register???
-    case 0x000f: return ram.data[0x000f];
-    case 0x0010: return ram.data[0x0010];
-    case 0x0011: return 0x20;                   /// Tx/Rx Control Status Register
-    case 0x0012: return 0;                      /// Receive data register
-    case 0x0014: return ram.data[0x0014];
-    case 0x0015: return scic->R_port5();
-    //case 0x0017: return datapak->R_port6();
-    case 0x0018: return 0;                      /// Port7
-    case 0x0019: return 0xff;                   /// OCR???
-    case 0x001a: return 0xff;                   /// OCR???
-    case 0x001b: return 0x20;                   /// Timer3 Control/Status Register
-    case 0x001d: return 0;                      /// Timer2 Up Counter
-    case 0x001f: return 0;                      /// Test Register - DoNotUse
+    case 0x0002: return 0;                      // Port1 - Low Addr Bus - DoNotUse
+    case 0x0003: return datapak->R_port2();		// Port2 - Datapak Data Line
+    case 0x0006: return 0;                      // Port3 - Data Bus - DoNotUse
+    case 0x0007: return 0;                      // Port4 - High Addr Bus - DoNotUse
+    case 0x0008: return ram.data[0x0008];		// Timer1 Control
+    case 0x0009: return cpu->R_timer1_FRC_H();	// Timer1 Free Running Clock high byte
+    case 0x000a: return ram.data[0x000a];		// Timer1 Free Running Clock low byte
+    case 0x000b: return ram.data[0x000b];		// Timer1 Compare high byte
+    case 0x000c: return ram.data[0x000c];		// Timer1 Compare low byte
+    case 0x000d: return 0;                      // Input capture register???
+    case 0x000e: return 0;                      // Input capture register???
+    case 0x000f: return ram.data[0x000f];		// Timer2 Control
+    case 0x0010: return ram.data[0x0010];		// Rate Mode Control
+    case 0x0011: return 0x20;                   // Tx/Rx Control Status Register
+    case 0x0012: return 0;                      // Receive data register
+    case 0x0014: return ram.data[0x0014];		// Port5 - Control
+    case 0x0015: return scic->R_port5();		// Port5 - Semi Custom Chip Data
+    case 0x0017: return datapak->R_port6();		// Port6 - Datapak Control Line
+    case 0x0018: return 0;                      // Port7
+    case 0x0019: return 0xff;                   // OCR???
+    case 0x001a: return 0xff;                   // OCR???
+    case 0x001b: return 0x20;                   // Timer3 Control/Status Register
+    case 0x001d: return 0;                      // Timer2 Up Counter
+    case 0x001f: return 0;                      // Test Register - DoNotUse
     }
     return 0;
 }
@@ -99,24 +101,24 @@ void Memory::writeCPU(ADDRESS address, BYTE data)
 {
     switch (address)
     {
-    //case 0x0001: datapak->W_port2DDR(data); break;
-    //case 0x0003: datapak->W_port2(data);    break;
-    case 0x0008: cpu->W_timer1_CSR(data);   break;
-    case 0x0009: cpu->W_timer1_FRC_H(data); break;
-    case 0x000a: cpu->W_timer1_FRC_L(data); break;
-    case 0x000b:
+    case 0x0001: datapak->W_port2DDR(data); break;	// Port2 Data Direction
+    case 0x0003: datapak->W_port2(data);    break;	// Port2 - Datapak Data Line
+    case 0x0008: cpu->W_timer1_CSR(data);   break;	// Timer1 Control Status Register
+    case 0x0009: cpu->W_timer1_FRC_H(data); break;	// Timer1 Free Running Clock high byte
+    case 0x000a: cpu->W_timer1_FRC_L(data); break;	// Timer1 Free Running Clock low byte
+    case 0x000b:									// Timer1 Compare high byte
         ram.data[0x000b] = data;
         cpu->notify_timer1_OCR();
         break;
-    case 0x000c:
+    case 0x000c:									// Timer1 Compare low byte
         ram.data[0x000c] = data;
         cpu->notify_timer1_OCR();
         break;
-    case 0x000f: cpu->W_timer2_CSR(data);   break;
-    case 0x0010: ram.data[0x0010] = data;   break;
-    case 0x0014: ram.data[0x0014] = data;   break;
-    //case 0x0016: datapak->W_port6DDR(data); break;
-    //case 0x0017: datapak->W_port6(data);    break;
+    case 0x000f: cpu->W_timer2_CSR(data);   break;	// Timer2 Control
+    case 0x0010: ram.data[0x0010] = data;   break;	// Rate Mode Control
+    case 0x0014: ram.data[0x0014] = data;   break;	// Port5 Control
+    case 0x0016: datapak->W_port6DDR(data); break;	// Port6 Data Direction
+    case 0x0017: datapak->W_port6(data);    break;	// Port6 - Datapak Control Line
     }
 }
 
@@ -150,18 +152,24 @@ void Memory::triggerHardware(ADDRESS address)
 {
     switch (address & 65504)
     {
-	case 0x01c0: scic->switchOff();						break;
-    case 0x0200: scic->setPulse(true);					break;
-    case 0x0240: scic->setPulse(false);					break;
-    case 0x0280: break; //datapak->setV21(true);		break;
-    case 0x02c0: break; //datapak->setV21(false);		break;
-    case 0x0300: scic->counterReset();					break;
-    case 0x0340: scic->counterInc();					break;
-    case 0x0360: resetBanks();      					break;
-    case 0x0380: scic->setNMItoCPU(true);			    break;
-    case 0x03a0: nextRamBank();							break;
-    case 0x03c0: scic->setNMItoCPU(false);				break;
-    case 0x03e0: nextRomBank();						    break;
+	case 0x01c0: scic->switchOff();						break;	// Switch off system
+    case 0x0200: scic->setPulse(true);					break;	// Switch 21V Generation on
+    case 0x0240: scic->setPulse(false);					break;	// Switch 21V Generation off
+	case 0x0280:
+		datapak->setVoltage21(true);							// Set Datapak to use 21V (Datapak = Write | Rampak = None)
+		scic->setAlarm(true);									// Alarm is high - Sound emulation TODO
+		break;
+	case 0x02c0:
+		datapak->setVoltage21(false);							// Set Datapak to use 5V (Datapak = Read | Rampak = Read/Write)
+		scic->setAlarm(false);									// Alarm is low - Sound emulation TODO
+		break;
+    case 0x0300: scic->counterReset();					break;	// Reset Stage2 counter for timing and keyboard control
+    case 0x0340: scic->counterInc();					break;	// Incremenet Stage2 counter for timing and keyboard control
+    case 0x0360: resetBanks();      					break;	// Reset RAM and ROM page to 0
+    case 0x0380: scic->setNMItoCPU(true);			    break;	// Set NMI interrupts to go to the CPU
+    case 0x03a0: nextRamBank();							break;	// Increment RAM page
+    case 0x03c0: scic->setNMItoCPU(false);				break;	// Set NMI interrupts to go to the SCIC chip for timings when off
+    case 0x03e0: nextRomBank();						    break;	// Increment ROM page
     }
 }
 
