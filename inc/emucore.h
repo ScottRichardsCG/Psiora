@@ -21,6 +21,7 @@
 #define FILEIO_ROM_POS432			0x0a
 #define FILEIO_ROM_POS464			0x0b
 #define FILEIO_ROM_POS296			0x0c
+#define FILEIO_SaveFail_PowerOn		0xfb
 #define FILEIO_SUCCESS				0xfc
 #define FILEIO_RAM_SaveFail			0xfd
 #define FILEIO_ROM_Invalid			0xfe
@@ -66,7 +67,6 @@ private:
 
 	void INTERNAL_reset();
 	void INTERNAL_setPower(bool hasPower);
-	//int save();
 
 public:
     explicit EmuCore(void* ptrWindow);
@@ -84,6 +84,10 @@ public:
     int load(std::string filename);
     int analyseROM(std::string filename);
 	int save();
+
+	int insertPak(int id, std::string filename);
+	int ejectPak(int id, bool force);
+	int createPak(bool ram, int siz, std::string filename);
 };
 
 extern EmuCore *emucore;

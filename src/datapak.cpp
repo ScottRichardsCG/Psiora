@@ -26,6 +26,7 @@ bool Datapak::eject(int id, bool force) {
 	}
 	// Otherwise it went fine, or we have been told to ignore save fail
 	pak[id].properties.inserted = false;
+	pak[id].filename = "";
 	return ret;
 }
 
@@ -112,14 +113,14 @@ int Datapak::load(int id, std::string filename) {
 	loadFile.read((char *)loadData, MAX_PAK_SIZE + 6);
 	loadFile.close();
 
-	if (loadData[0] != 'O' || loadData[1] != 'P' || loadData[2] != 'K')
+	if (loadData[0] != 0x4F || loadData[1] != 0x50 || loadData[2] != 0x4B)	// Header = OPK
 		return PAK_ERR_NOT_OPK;
 
 	memset(pak[id].data, (loadData[6] ? 0xff : 0x00), MAX_PAK_SIZE);
 
 	unsigned int size;
 	size = (loadData[3] << 16) + (loadData[4] << 8) + loadData[5] + 1;
-	if ((loadData[7] << 13) >= MAX_PAK_SIZE)
+	if ((loadData[7] << 13) > MAX_PAK_SIZE)
 		return PAK_ERR_TOO_LARGE;
 
 	memcpy(pak[id].data, &loadData[6], size);
@@ -148,6 +149,7 @@ int Datapak::load(int id, std::string filename) {
 	pak[id].addr.segment = 0;
 	pak[id].addr.segment_mask = 0;
 
+	pak[id].properties.inserted = true;
 	return PAK_SUCCESSFUL;
 }
 

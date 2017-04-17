@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "psiora", "psiora.vcxproj", "{E21319F4-C547-323F-8ABB-91D42142A99C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "psiora", "psiora.vcxproj", "{BF92D6D7-942F-37C3-8C32-230926AB59F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E21319F4-C547-323F-8ABB-91D42142A99C}.Debug|x86.ActiveCfg = Debug|Win32
-		{E21319F4-C547-323F-8ABB-91D42142A99C}.Debug|x86.Build.0 = Debug|Win32
-		{E21319F4-C547-323F-8ABB-91D42142A99C}.Release|x86.ActiveCfg = Release|Win32
-		{E21319F4-C547-323F-8ABB-91D42142A99C}.Release|x86.Build.0 = Release|Win32
+		{BF92D6D7-942F-37C3-8C32-230926AB59F6}.Debug|x86.ActiveCfg = Debug|Win32
+		{BF92D6D7-942F-37C3-8C32-230926AB59F6}.Debug|x86.Build.0 = Debug|Win32
+		{BF92D6D7-942F-37C3-8C32-230926AB59F6}.Release|x86.ActiveCfg = Release|Win32
+		{BF92D6D7-942F-37C3-8C32-230926AB59F6}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		Qt5Version = QT58_msvc2015
 	EndGlobalSection
 EndGlobal

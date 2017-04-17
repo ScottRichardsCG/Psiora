@@ -175,8 +175,6 @@ void EmuCore::coreRountine() {
 
 	lk.lock();
 
-    //save(); // Not currently implemented but will be here
-
 	coreAlive = false; // Set this to false to tell functions the objects should not be accessed
 
 	lk.unlock();
@@ -310,8 +308,10 @@ int EmuCore::load(std::string filename) {
 
 
 int EmuCore::save() {
-    if (!romLoaded)
+    if (!romLoaded || !power)
 		return FILEIO_SUCCESS;
+	if (power)
+		return FILEIO_SaveFail_PowerOn;
 
 	std::ofstream ramStream;
 	ramStream.open(ramPath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
@@ -369,6 +369,7 @@ int EmuCore::analyseROM(std::string filename) {
 void EmuCore::hardReset() {
 	std::lock_guard<std::mutex> lk(coreMutex);
     INTERNAL_reset();
+	INTERNAL_setPower(true);
 	// Lock released when out of scope
 }
 
@@ -376,4 +377,21 @@ int EmuCore::getEmuSpeed() {
 	// emuSpeed is cloned otherwise a write could change the value during these 3 read operations
 	int val = emuSpeed;
 	return val < 0 ? 0 : val > 100 ? 100 : val;
+}
+
+
+// Public Datapak load/create/eject functions - thread safe
+int EmuCore::ejectPak(int id, bool force) {
+	std::lock_guard<std::mutex> lk(coreMutex);
+	return datapak->eject(id, force);
+}
+
+int EmuCore::insertPak(int id, std::string filename) {
+	std::lock_guard<std::mutex> lk(coreMutex);
+	return datapak->load(id, filename);
+}
+
+int EmuCore::createPak(bool ram, int siz, std::string filename) {
+	std::lock_guard<std::mutex> lk(coreMutex);
+	return datapak->create (ram, siz, filename);
 }

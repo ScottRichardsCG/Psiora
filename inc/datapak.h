@@ -5,7 +5,7 @@
 
 #include "global.h"
 
-#define MAX_PAK_SIZE			0xFFFF
+#define MAX_PAK_SIZE			0x10000		// 65536 Bytes (64KB)
 #define PAK_SUCCESSFUL			0x00
 #define PAK_ERR_CANT_OPEN		0x01
 #define PAK_ERR_NOT_OPK			0x02
@@ -23,7 +23,6 @@ typedef struct {
 		bool inserted;
 		bool readOnly;
 	} properties;
-
 
 	// Last known Datapak lines for this slot
 	// This is for detecting a pull to High or Low (change from 0-1 or 1-0)

@@ -12,25 +12,22 @@ TARGET = psiora
 TEMPLATE = app
 
 
-#Inclue SDL1.2 - Win32
+#Inclue SDL2 - Win32
 win32:DEFINES += "_GNU_SOURCE=1"
-#win32:DEFINES += "main=SDL_main"
 
-#Include SDL1.2 - Win32 Mingw
-win32-g++*:INCLUDEPATH += C:/Devel/SDL-devel-1.2.15-mingw32/include/SDL
-#win32-g++*:LIBS += C:/Devel/SDL-devel-1.2.15-mingw32/lib/libSDLmain.a
-win32-g++*:LIBS += C:/Devel/SDL-devel-1.2.15-mingw32/lib/libSDL.dll.a
+#Include SDL2 - Win32 Mingw
+win32-g++*:INCLUDEPATH += %SDL2DIR%/i686-w64-mingw32/include/SDL2
+win32-g++*:LIBS += %SDL2DIR%/i686-w64-mingw32/lib/libSDL2.dll.a
 
-#Include SDL1.2 - Win32 VC
-win32-msvc*:INCLUDEPATH += C:/Devel/SDL-devel-1.2.15-VC/include
+#Include SDL2 - Win32 VC
+win32-msvc*:INCLUDEPATH += %SDL2DIR%/include
 win32-msvc*:LIBS += winmm.lib
-#win32-msvc*:LIBS += C:/Devel/SDL-devel-1.2.15-VC/lib/x86/SDLmain.lib
-win32-msvc*:LIBS += C:/Devel/SDL-devel-1.2.15-VC/lib/x86/SDL.lib
+win32-msvc*:LIBS += %SDL2DIR%/lib/x86/SDL2.lib
 
-#Include SDL1.2 - Unix
+#Include SDL2 - Unix
 unix:INCLUDEPATH += /usr/include/SDL2
-unix:LIBS += -L/usr/lib/x86_64-linux-gnu -lSDL2
-unix:QMAKE_CXXFLAGS += -I/usr/include/SDL2 -D_REENTRANT -std=c++11
+unix:LIBS += `sdl2-config --libs`
+unix:QMAKE_CXXFLAGS += `sdl2-config --cflags` -std=c++11
 unix:QMAKE_CXXFLAGS -= "-Dmain=SDL_main"
 
 INCLUDEPATH += inc/ src/
@@ -46,7 +43,8 @@ SOURCES += src/main.cpp \
     src/datapak.cpp \
     src/cpu_opcodes.cpp \
     src/lcd.cpp \
-    src/debug.cpp
+    src/debug.cpp \
+		src/createpakdialog.cpp
 
 HEADERS  += inc/mainwindow.h \
     inc/renderer.h \
@@ -58,9 +56,11 @@ HEADERS  += inc/mainwindow.h \
     inc/cpu.h \
     inc/datapak.h \
     inc/lcd.h \
-    inc/debug.h
+    inc/debug.h \
+		inc/createpakdialog.h
 
-FORMS    += forms/mainwindow.ui
+FORMS    += forms/mainwindow.ui \
+		forms/createpakdialog.ui
 
 DISTFILES +=
 
