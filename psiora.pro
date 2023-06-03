@@ -19,6 +19,10 @@ win32:DEFINES += "_GNU_SOURCE=1"
 win32-g++*:INCLUDEPATH += %SDL2DIR%/i686-w64-mingw32/include/SDL2
 win32-g++*:LIBS += %SDL2DIR%/i686-w64-mingw32/lib/libSDL2.dll.a
 
+# When using MXE (installed in /opt/mxe), comment two lines above and uncomment the following lines; install qt5 and sdl2 for i686-w64-mingw32.static
+#win32-g++*:INCLUDEPATH += /opt/mxe/usr/i686-w64-mingw32.static/include/SDL2
+#win32-g++*:LIBS += -lmingw32 -mwindows -lSDL2 -lm -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 -lversion -luuid -ladvapi32 -lsetupapi -lshell32 -ldinput8
+
 #Include SDL2 - Win32 VC
 win32-msvc*:INCLUDEPATH += %SDL2DIR%/include
 win32-msvc*:LIBS += winmm.lib
